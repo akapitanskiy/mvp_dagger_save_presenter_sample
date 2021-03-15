@@ -7,5 +7,5 @@ data class PictureResponse (
 
     var total: Int,
     var totalHits: Int,
-    var Hits: List<Hit>
+    var hits: List<Hit>
 )

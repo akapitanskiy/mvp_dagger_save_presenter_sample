@@ -23,22 +23,44 @@ class MainPresenter @Inject constructor(
     private val seconds = 101L
     private var timerVal = seconds.toString()
 
+    companion object {
+        private const val TAG = "MainPresenter"
+    }
+
     init {
-        Log.d(this.javaClass.simpleName, "created: ")
+        Log.d(TAG, "created")
     }
 
     override fun onViewReady(isFirstLaunch: Boolean) {
         startTimer()
-        fetchData(isFirstLaunch)
+//        fetchData(isFirstLaunch)
+        fetchImageUrls()
     }
 
-    private fun fetchData(isFirstLaunch: Boolean) {
-        disposable.add( mainRepository.fetchData(isFirstLaunch)
-            .map {
-                return@map it.sortedBy { item -> item.title }
-            }
+//    private fun fetchData(isFirstLaunch: Boolean) {
+//        disposable.add( mainRepository.fetchData(isFirstLaunch)
+//            .map {
+//                return@map it.sortedBy { item -> item.title }
+//            }
+//            .observeOn(AndroidSchedulers.mainThread())
+//            .subscribe { view?.updateList(it) }
+//        )
+//    }
+
+    private fun fetchImageUrls() {
+        disposable.add(mainRepository.searchImagesRequest()
+            .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { view?.updateList(it) }
+            .subscribe(
+                {
+                    view?.updateList(it.hits.sortedByDescending {
+                            hit -> hit.likes
+                    })
+                },
+                {
+                    Log.d(TAG, "fetchImageUrls error: ${it.message}")
+                }
+            )
         )
     }
 

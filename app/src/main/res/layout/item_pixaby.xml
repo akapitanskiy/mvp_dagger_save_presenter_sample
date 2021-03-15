@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
-    app:cardCornerRadius="8dp"
-    >
+    app:cardCornerRadius="8dp">
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
@@ -21,20 +21,23 @@
             android:src="@mipmap/ic_launcher"/>
 
         <TextView
-            android:id="@+id/text_view_cerator"
+            android:id="@+id/text_view_creator"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Creator name"
             android:textColor="@color/black"
-            android:textSize="20sp"/>
+            android:textSize="20sp"
+            android:layout_below="@id/image_view"
+            tools:text="Creator name"/>
 
         <TextView
             android:id="@+id/text_view_likes"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Like: "
+            android:layout_below="@id/text_view_creator"
+            android:drawableRight="@drawable/ic_heart"
+            tools:text="Like: "
             />
 
-    </LinearLayout>
+    </RelativeLayout>
 
 </androidx.cardview.widget.CardView>

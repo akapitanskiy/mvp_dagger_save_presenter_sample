@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.alexthekap.mvp_dagger_save_presenter_sample.data.db.PostEntity
+import com.alexthekap.mvp_dagger_save_presenter_sample.data.nerwork.model.Hit
 import com.alexthekap.mvp_dagger_save_presenter_sample.databinding.ActivityMainBinding
 import com.alexthekap.mvp_dagger_save_presenter_sample.di.ComponentManager
 import javax.inject.Inject
@@ -12,7 +13,7 @@ import javax.inject.Inject
 class MainActivity : AppCompatActivity(), MainContract.IView {
 
     private lateinit var b: ActivityMainBinding
-    private val adapter = MainAdapter()
+    private val adapter = MainAdapter(this)
 
     @Inject
     lateinit var presenter: MainContract.IPresenter
@@ -29,12 +30,12 @@ class MainActivity : AppCompatActivity(), MainContract.IView {
         ComponentManager.getMainActivityComponent().inject(this)
         presenter.bindView(this)
         presenter.onViewReady(savedInstanceState == null)
-        Log.d("MainRepositoryTag", "onCreate: ${savedInstanceState?.toString()?.substring(0, 100)}")
+        Log.d("MainActivityTag", "onCreate: ${savedInstanceState?.toString()?.substring(0, 100)}")
     }
 
-    override fun updateList(list: List<PostEntity>) {
+    override fun updateList(list: List<Hit>) {
         adapter.submitList(list)
-        Log.d("MainRepositoryTag", "updateList: called. size ${list.size}")
+        Log.d("MainActivityTag", "updateList: called. size ${list.size}")
     }
 
     override fun updateTimer(time: String) {

@@ -10,5 +10,5 @@ import retrofit2.http.GET
 interface PixabayApi {
 
     @GET("?key=18933503-d327756bf2a67a0d0b736d17a&q=yellow+flowers&image_type=photo&pretty=true")
-    fun getPosts(): Single<List<PictureResponse>>
+    fun getImages(): Single<PictureResponse>
 }

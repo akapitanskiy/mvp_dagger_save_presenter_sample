@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Presenter persistence with Dagger</string>
+    <string name="likes_number">"%d "</string>
 </resources>

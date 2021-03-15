@@ -42,9 +42,6 @@ interface MainActivityComponent {
 @Module
 interface BindsPresenterModule {
 
-//    @Binds
-//    fun bindRepository(impl: MainRepository): MainRepository
-
     @Binds
     @ActivityScope
     fun bindPresenter(impl: MainPresenter): MainContract.IPresenter // нужен т.к. типы не совпадают
@@ -63,16 +60,16 @@ class RepoModuleProvider {
         return retrofit.create(JsonPlaceholderApi::class.java)
     }
 
-    @Provides
-    @ActivityScope
-//    @Singleton
-    fun provideRetrofit(): Retrofit {
-        return Retrofit.Builder()
-            .baseUrl(AppConstants.JSON_PLACEHOLDER_BASE_URL)
-            .addConverterFactory(GsonConverterFactory.create())
-            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-            .build()
-    }
+//    @Provides
+//    @ActivityScope
+////    @Singleton
+//    fun provideRetrofit(): Retrofit {
+//        return Retrofit.Builder()
+//            .baseUrl(AppConstants.JSON_PLACEHOLDER_BASE_URL)
+//            .addConverterFactory(GsonConverterFactory.create())
+//            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+//            .build()
+//    }
 
 
     @Provides
@@ -83,16 +80,16 @@ class RepoModuleProvider {
         return retrofit.create(PixabayApi::class.java)
     }
 
-//    @Provides
-//    @ActivityScope
-////    @Singleton
-//    fun provideRetrofit(): Retrofit {
-//        return Retrofit.Builder()
-//            .baseUrl(AppConstants.PIXABAY_BASE_URL)
-//            .addConverterFactory(GsonConverterFactory.create())
-//            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-//            .build()
-//    }
+    @Provides
+    @ActivityScope
+//    @Singleton
+    fun provideRetrofit(): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl(AppConstants.PIXABAY_BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+            .build()
+    }
 
 
     @Provides
@@ -108,11 +105,5 @@ class RepoModuleProvider {
     @ActivityScope
     fun provideCloudSignUserDao(database: PostsDatabase): PostsDao =
         database.getPostsDao()
-
-//    @Provides
-//    @ActivityScope
-//    fun provideRepository(jsonPlaceholderApi: JsonPlaceholderApi): MainRepository {
-//        return MainRepository(jsonPlaceholderApi)
-//    }
 
 }

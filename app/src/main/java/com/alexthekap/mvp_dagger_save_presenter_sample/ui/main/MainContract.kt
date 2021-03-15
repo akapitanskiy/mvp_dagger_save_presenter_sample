@@ -1,6 +1,7 @@
 package com.alexthekap.mvp_dagger_save_presenter_sample.ui.main
 
 import com.alexthekap.mvp_dagger_save_presenter_sample.data.db.PostEntity
+import com.alexthekap.mvp_dagger_save_presenter_sample.data.nerwork.model.Hit
 import com.alexthekap.mvp_dagger_save_presenter_sample.ui.BaseIPresenter
 
 /**
@@ -16,6 +17,6 @@ interface MainContract {
     interface IView {
 
         fun updateTimer(time: String)
-        fun updateList(list: List<PostEntity>)
+        fun updateList(list: List<Hit>)
     }
 }
