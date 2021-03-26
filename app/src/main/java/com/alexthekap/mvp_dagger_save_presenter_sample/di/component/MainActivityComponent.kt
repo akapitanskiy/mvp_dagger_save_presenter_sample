@@ -2,6 +2,8 @@ package com.alexthekap.mvp_dagger_save_presenter_sample.di.component
 
 import android.content.Context
 import androidx.room.Room
+import com.alexthekap.mvp_dagger_save_presenter_sample.data.db.PixabayDao
+import com.alexthekap.mvp_dagger_save_presenter_sample.data.db.PixabayDatabase
 import com.alexthekap.mvp_dagger_save_presenter_sample.data.db.PostsDao
 import com.alexthekap.mvp_dagger_save_presenter_sample.data.db.PostsDatabase
 import com.alexthekap.mvp_dagger_save_presenter_sample.data.nerwork.services.JsonPlaceholderApi
@@ -60,18 +62,6 @@ class RepoModuleProvider {
         return retrofit.create(JsonPlaceholderApi::class.java)
     }
 
-//    @Provides
-//    @ActivityScope
-////    @Singleton
-//    fun provideRetrofit(): Retrofit {
-//        return Retrofit.Builder()
-//            .baseUrl(AppConstants.JSON_PLACEHOLDER_BASE_URL)
-//            .addConverterFactory(GsonConverterFactory.create())
-//            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-//            .build()
-//    }
-
-
     @Provides
     @ActivityScope
     fun providePixabayApi(
@@ -91,7 +81,6 @@ class RepoModuleProvider {
             .build()
     }
 
-
     @Provides
     @ActivityScope
     fun providePostsRoomDb(context: Context): PostsDatabase =
@@ -103,7 +92,26 @@ class RepoModuleProvider {
 
     @Provides
     @ActivityScope
-    fun provideCloudSignUserDao(database: PostsDatabase): PostsDao =
+    fun providePostsDao(database: PostsDatabase): PostsDao =
         database.getPostsDao()
+
+
+    @Provides
+    @ActivityScope
+    fun providePixabayDb(context: Context): PixabayDatabase {
+        return Room.databaseBuilder(
+            context,
+            PixabayDatabase::class.java,
+            PixabayDatabase.PIX_DB_FILE_NAME
+        )
+            .fallbackToDestructiveMigration()
+            .build()
+    }
+
+    @Provides
+    @ActivityScope
+    fun providePixabayDao(db: PixabayDatabase): PixabayDao {
+        return db.getPixabayDao()
+    }
 
 }

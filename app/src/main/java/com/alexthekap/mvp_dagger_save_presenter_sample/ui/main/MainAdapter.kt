@@ -1,6 +1,7 @@
 package com.alexthekap.mvp_dagger_save_presenter_sample.ui.main
 
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,25 +11,30 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.alexthekap.mvp_dagger_save_presenter_sample.R
-import com.alexthekap.mvp_dagger_save_presenter_sample.data.nerwork.model.Hit
-import com.squareup.picasso.Picasso
+import com.alexthekap.mvp_dagger_save_presenter_sample.data.db.HitPlusImgEntity
+import io.reactivex.disposables.CompositeDisposable
 
 /**
  * created on 01.03.2021 14:33
  */
-class MainAdapter(val context: Context) : ListAdapter<Hit, MainAdapter.PixabayItemViewHolder>(DIFF_CALLBACK) {
+class MainAdapter (val context: Context)
+    : ListAdapter<HitPlusImgEntity, MainAdapter.PixabayItemViewHolder>(DIFF_CALLBACK) {
+
+    private var presenter: MainContract.IPresenter? = null
+    private val disposable = CompositeDisposable()
 
     companion object {
+        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<HitPlusImgEntity>() {
 
-        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<Hit>() {
-            override fun areItemsTheSame(oldItem: Hit, newItem: Hit): Boolean {
-                return oldItem.id == newItem.id
+            override fun areItemsTheSame(oldItem: HitPlusImgEntity, newItem: HitPlusImgEntity): Boolean {
+                return oldItem.jsonId == newItem.jsonId
             }
 
-            override fun areContentsTheSame(oldItem: Hit, newItem: Hit): Boolean {
+            override fun areContentsTheSame(oldItem: HitPlusImgEntity, newItem: HitPlusImgEntity): Boolean {
                 return  oldItem.previewURL == newItem.previewURL &&
                         oldItem.largeImageURL == newItem.largeImageURL &&
-                        oldItem.creator == newItem.creator &&
+                        oldItem.user == newItem.user &&
+                        oldItem.img.contentEquals(newItem.img) &&
                         oldItem.likes == newItem.likes
             }
         }
@@ -40,23 +46,36 @@ class MainAdapter(val context: Context) : ListAdapter<Hit, MainAdapter.PixabayIt
     }
 
     override fun onBindViewHolder(holder: PixabayItemViewHolder, position: Int) {
-        val currentHit = getItem(position)
-        Picasso.get()
-            .load(currentHit.largeImageURL)
-            .placeholder(R.drawable.ic_image_placeholder)
-            .error(R.drawable.ic_error)
-            .fit()
-            .centerInside()
-            .into(holder.imageView)
-        holder.tvCreator.text = currentHit.creator
+        val currentHit: HitPlusImgEntity = getItem(position)
+        if (currentHit.img == null) {
+            holder.imageView.setImageResource(R.drawable.ic_image_placeholder)
+            presenter?.fetchImage(currentHit)
+        } else {
+            holder.imageView.setImageBitmap(
+                BitmapFactory.decodeByteArray(currentHit.img, 0, currentHit.img!!.size)
+            )
+        }
+
+        holder.tvCreator.text = currentHit.user
         holder.tvLikes.text = context.getString(R.string.likes_number, currentHit.likes)
     }
 
-    inner class PixabayItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+
+    class PixabayItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         val imageView: ImageView = itemView.findViewById(R.id.image_view)
         val tvCreator: TextView = itemView.findViewById(R.id.text_view_creator)
         val tvLikes: TextView = itemView.findViewById(R.id.text_view_likes)
     }
 
+    fun setPresenter(presenter: MainContract.IPresenter) {
+        this.presenter = presenter
+    }
+
+    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView)
+        disposable.clear()
+        disposable.dispose()
+        presenter = null
+    }
 }

@@ -1,18 +1,21 @@
 package com.alexthekap.mvp_dagger_save_presenter_sample.data.repository
 
 import android.util.Log
-import com.alexthekap.mvp_dagger_save_presenter_sample.data.db.PostEntity
-import com.alexthekap.mvp_dagger_save_presenter_sample.data.db.PostsDao
-import com.alexthekap.mvp_dagger_save_presenter_sample.data.nerwork.model.Hit
-import com.alexthekap.mvp_dagger_save_presenter_sample.data.nerwork.model.PictureResponse
+import com.alexthekap.mvp_dagger_save_presenter_sample.data.db.*
 import com.alexthekap.mvp_dagger_save_presenter_sample.data.nerwork.services.JsonPlaceholderApi
 import com.alexthekap.mvp_dagger_save_presenter_sample.data.nerwork.services.PixabayApi
+import io.reactivex.Completable
 import io.reactivex.Observable
-import io.reactivex.Single
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
+import io.reactivex.subjects.PublishSubject
+import java.io.ByteArrayOutputStream
+import java.io.FileNotFoundException
+import java.io.InputStream
+import java.net.URL
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+
 
 /**
  * created on 19.02.2021 16:32
@@ -20,16 +23,28 @@ import javax.inject.Inject
 class MainRepository @Inject constructor( // TODO internal class надо ли ???
     private val jsonPlaceholderApi: JsonPlaceholderApi,
     private val postsDao: PostsDao,
-    private val pixabayApi: PixabayApi
+    private val pixabayApi: PixabayApi,
+    private val pixabayDao: PixabayDao
 ) {
 
     private val TAG = "MainRepositoryTag"
     private val disposable = CompositeDisposable()
+    private var fetchPixabayDataDebouncedSubj = PublishSubject.create<Unit>()
+
+    init {
+        disposable.add(
+            fetchPixabayDataDebouncedSubj
+                .throttleFirst(2000, TimeUnit.MILLISECONDS)
+//                .debounce(2000, TimeUnit.MILLISECONDS)
+                .subscribe {
+                    Log.d(TAG, "debounce: called fetchApiImages()")
+                    fetchApiImages()
+                }
+        )
+    }
 
     fun fetchData(isFirstLaunch: Boolean): Observable<List<PostEntity>> {
-
-        val observable = postsDao.getAll()
-
+        val dbAllPostsObservable = postsDao.getAll()
         if (isFirstLaunch) {
             disposable.add(jsonPlaceholderApi.getPosts()
                 .map {
@@ -47,16 +62,103 @@ class MainRepository @Inject constructor( // TODO internal class надо ли ?
                     })
             )
         }
-        return observable
+        return dbAllPostsObservable
     }
 
-    fun searchImagesRequest(): Single<PictureResponse> {
-        Log.d(TAG, "searchImagesRequest: called")
-        return pixabayApi.getImages()
-            .map {
-                Log.d(TAG, "searchImagesRequest() map: GET images called. size ${it}")
-                return@map it
+    fun fetchPixabayData(isFirstLaunch: Boolean): Observable<List<HitPlusImgEntity>> {
+
+        val dbAllHitsObservable = pixabayDao.getAllHitsFromDb()
+
+        if (isFirstLaunch) {
+            Log.d(TAG, "fetchPixabayData: called fetchApiImages() firstLaunch $isFirstLaunch")
+            fetchApiImages()
+        }
+        return dbAllHitsObservable
+    }
+
+    fun fetchImage(hitEntity: HitPlusImgEntity) {
+
+        disposable.add(
+            Completable.fromAction {
+                Log.d(TAG, "fetchImage: ")
+                val outputStream = ByteArrayOutputStream()
+                val buf = ByteArray(1024)
+                var n: Int
+                var inputStream: InputStream? = null
+
+                try {
+                    inputStream = URL(hitEntity.largeImageURL).openStream() // TODO okHttp
+                } catch (ex: FileNotFoundException) {
+                    Log.d(TAG, "ERROR fetchImage: catch block ${ex.message}")
+                    fetchPixabayDataDebouncedSubj.onNext(Unit)
+                }
+
+                while (true) {
+                    n = inputStream?.read(buf)!!
+                    if (n == -1) break
+                    outputStream.write(buf, 0, n)
+                }
+                outputStream.close()
+                inputStream.close()
+                Log.d(TAG, "fetchImage: ByteArray size ${outputStream.toByteArray().size}")
+                pixabayDao.updateImg(outputStream.toByteArray(), hitEntity.jsonId)
             }
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                    {},
+                    {
+                        Log.d(TAG, "fetchImage: error ${it.message}")
+                    }
+                )
+        )
+    }
+
+    private fun fetchApiImages() {
+        disposable.add(
+            pixabayApi.getImages()
+                .map {
+                    Log.d(TAG, "fetchApiImages() map: GET images api called. response: $it")
+                    return@map it.hits
+                }
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                    { jsonHits ->
+                        val listToUpdate = ArrayList<HitPlusImgEntity>()
+                        for (jsonHit in jsonHits) {
+                            val dbHit = pixabayDao.getById(jsonHit.jsonId)
+
+                            if (dbHit?.img != null && (dbHit.likes != jsonHit.likes || dbHit.user != jsonHit.user)) {
+                                pixabayDao.updateLikesAndUser(jsonHit.user, jsonHit.likes, jsonHit.jsonId)
+                                Log.d(TAG,"fetchApiImages: updateLikesAndUser row ${jsonHit.jsonId} ${dbHit.jsonId}")
+                            }
+
+                            if (isContentDifferent(jsonHit, dbHit) && dbHit!!.img == null) {
+//                                pixabayDao.updateContent(jsonHit.previewURL, jsonHit.largeImageURL, jsonHit.user, jsonHit.likes, jsonHit.jsonId)
+                                Log.d(TAG,"fetchApiImages: row updated ${jsonHit.jsonId} ${dbHit.jsonId}")
+                                listToUpdate.add(jsonHit)
+                            }
+
+                        }
+                        pixabayDao.insert(jsonHits)
+                        if ( !listToUpdate.isEmpty() ) {
+                            pixabayDao.updateAll(listToUpdate)
+                        }
+                        Log.d(TAG,"fetchApiImages success: pixabayDao insert called, size ${jsonHits.size}")
+                    },
+
+                    {
+                        Log.d(TAG, "fetchApiImages onError : ${it.message}")
+                    }
+                )
+        )
+    }
+
+    private fun isContentDifferent(jsonHit: HitPlusImgEntity, dbHit: HitPlusImgEntity?): Boolean {
+        return (dbHit != null
+                && (jsonHit.previewURL != dbHit.previewURL ||
+                jsonHit.largeImageURL != dbHit.largeImageURL ||
+                jsonHit.user != dbHit.user ||
+                jsonHit.likes != dbHit.likes))
     }
 
     fun onViewFinished() {

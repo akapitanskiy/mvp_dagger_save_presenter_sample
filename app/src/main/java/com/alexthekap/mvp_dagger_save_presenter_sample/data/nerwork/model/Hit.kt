@@ -8,9 +8,13 @@ import com.google.gson.annotations.SerializedName
 data class Hit (
 
     var id: Int,
+
     var previewURL: String,
+
     var largeImageURL: String,
+
     @SerializedName("user")
     var creator: String,
+
     var likes: Int
 )

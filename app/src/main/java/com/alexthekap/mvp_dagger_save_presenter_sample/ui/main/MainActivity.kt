@@ -4,19 +4,17 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.alexthekap.mvp_dagger_save_presenter_sample.data.db.PostEntity
-import com.alexthekap.mvp_dagger_save_presenter_sample.data.nerwork.model.Hit
+import com.alexthekap.mvp_dagger_save_presenter_sample.data.db.HitPlusImgEntity
 import com.alexthekap.mvp_dagger_save_presenter_sample.databinding.ActivityMainBinding
 import com.alexthekap.mvp_dagger_save_presenter_sample.di.ComponentManager
 import javax.inject.Inject
 
 class MainActivity : AppCompatActivity(), MainContract.IView {
 
-    private lateinit var b: ActivityMainBinding
-    private val adapter = MainAdapter(this)
-
     @Inject
     lateinit var presenter: MainContract.IPresenter
+    private lateinit var b: ActivityMainBinding
+    private val adapter = MainAdapter(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,12 +26,14 @@ class MainActivity : AppCompatActivity(), MainContract.IView {
 //        b.recyclerView.setHasFixedSize(true)
 
         ComponentManager.getMainActivityComponent().inject(this)
+        adapter.setPresenter(presenter)
         presenter.bindView(this)
-        presenter.onViewReady(savedInstanceState == null)
+        presenter.isFirstLaunch(savedInstanceState == null)
+        presenter.onViewReady()
         Log.d("MainActivityTag", "onCreate: ${savedInstanceState?.toString()?.substring(0, 100)}")
     }
 
-    override fun updateList(list: List<Hit>) {
+    override fun updateList(list: List<HitPlusImgEntity>) {
         adapter.submitList(list)
         Log.d("MainActivityTag", "updateList: called. size ${list.size}")
     }

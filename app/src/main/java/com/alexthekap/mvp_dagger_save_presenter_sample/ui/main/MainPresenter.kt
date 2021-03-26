@@ -2,11 +2,11 @@ package com.alexthekap.mvp_dagger_save_presenter_sample.ui.main
 
 import android.os.CountDownTimer
 import android.util.Log
+import com.alexthekap.mvp_dagger_save_presenter_sample.data.db.HitPlusImgEntity
 import com.alexthekap.mvp_dagger_save_presenter_sample.data.repository.MainRepository
 import com.alexthekap.mvp_dagger_save_presenter_sample.di.component.ActivityScope
 import com.alexthekap.mvp_dagger_save_presenter_sample.ui.BasePresenter
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import javax.inject.Inject
 
@@ -22,6 +22,7 @@ class MainPresenter @Inject constructor(
     private val interval = 1000L
     private val seconds = 101L
     private var timerVal = seconds.toString()
+    private var isFirstLaunch = true
 
     companion object {
         private const val TAG = "MainPresenter"
@@ -31,37 +32,29 @@ class MainPresenter @Inject constructor(
         Log.d(TAG, "created")
     }
 
-    override fun onViewReady(isFirstLaunch: Boolean) {
+    override fun onViewReady() {
         startTimer()
-//        fetchData(isFirstLaunch)
-        fetchImageUrls()
+        fetchImagesUrls()
     }
 
-//    private fun fetchData(isFirstLaunch: Boolean) {
-//        disposable.add( mainRepository.fetchData(isFirstLaunch)
-//            .map {
-//                return@map it.sortedBy { item -> item.title }
-//            }
-//            .observeOn(AndroidSchedulers.mainThread())
-//            .subscribe { view?.updateList(it) }
-//        )
-//    }
+    private fun fetchImagesUrls() {
 
-    private fun fetchImageUrls() {
-        disposable.add(mainRepository.searchImagesRequest()
+        disposable.add(mainRepository.fetchPixabayData(isFirstLaunch)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 {
-                    view?.updateList(it.hits.sortedByDescending {
-                            hit -> hit.likes
-                    })
+                    view?.updateList(it)
                 },
                 {
                     Log.d(TAG, "fetchImageUrls error: ${it.message}")
                 }
             )
         )
+    }
+
+    override fun fetchImage(hitEntity: HitPlusImgEntity) {
+        mainRepository.fetchImage(hitEntity)
     }
 
     private fun startTimer() {
@@ -86,7 +79,7 @@ class MainPresenter @Inject constructor(
         mainRepository.onViewFinished()
     }
 
-    override fun onViewReady() {
-        // Empty
+    override fun isFirstLaunch(isFirstLaunch: Boolean) {
+        this.isFirstLaunch = isFirstLaunch
     }
 }
