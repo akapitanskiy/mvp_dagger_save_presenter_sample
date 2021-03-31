@@ -15,6 +15,6 @@ class AppConstants {
     companion object {
         const val EXTRA_MODE = "mode"
         const val JSON_PLACEHOLDER_BASE_URL = "https://jsonplaceholder.typicode.com"
-        const val PIXABAY_BASE_URL = "https://pixabay.com/api/"
+        const val PIXABAY_BASE_URL = "https://pixabay.com/"
     }
 }

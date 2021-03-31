@@ -9,13 +9,17 @@ import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
+import okhttp3.ResponseBody
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.http.Path
 import java.io.ByteArrayOutputStream
 import java.io.FileNotFoundException
 import java.io.InputStream
 import java.net.URL
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
-
 
 /**
  * created on 19.02.2021 16:32
@@ -78,39 +82,61 @@ class MainRepository @Inject constructor( // TODO internal class надо ли ?
 
     fun fetchImage(hitEntity: HitPlusImgEntity) {
 
+        val call = pixabayApi.downloadFile(hitEntity.largeImageURL)
+
+        call.enqueue(object : Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                if (!response.isSuccessful) {
+                    Log.d(TAG, "ERROR onFailure: ${response.errorBody()}")
+                    fetchPixabayDataDebouncedSubj.onNext(Unit)
+                } else {
+                    response.body()?.let {
+                        val arr = getByteArray(it)
+                        update(arr, hitEntity.jsonId)
+                        Log.d(TAG, "onResponse: ByteArray size ${arr.size}")
+                    }
+                }
+            }
+
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                Log.d(TAG, "ERROR onFailure: ${t.message}")
+                fetchPixabayDataDebouncedSubj.onNext(Unit)
+            }
+        })
+    }
+
+    fun update(array: ByteArray, jsonId: Long) {
+
         disposable.add(
             Completable.fromAction {
-                Log.d(TAG, "fetchImage: ")
-                val outputStream = ByteArrayOutputStream()
-                val buf = ByteArray(1024)
-                var n: Int
-                var inputStream: InputStream? = null
-
-                try {
-                    inputStream = URL(hitEntity.largeImageURL).openStream() // TODO okHttp
-                } catch (ex: FileNotFoundException) {
-                    Log.d(TAG, "ERROR fetchImage: catch block ${ex.message}")
-                    fetchPixabayDataDebouncedSubj.onNext(Unit)
-                }
-
-                while (true) {
-                    n = inputStream?.read(buf)!!
-                    if (n == -1) break
-                    outputStream.write(buf, 0, n)
-                }
-                outputStream.close()
-                inputStream.close()
-                Log.d(TAG, "fetchImage: ByteArray size ${outputStream.toByteArray().size}")
-                pixabayDao.updateImg(outputStream.toByteArray(), hitEntity.jsonId)
+                pixabayDao.updateImg(array, jsonId)
+                Log.d(TAG, "update: ByteArray size ${array.size}")
             }
-                .subscribeOn(Schedulers.io())
-                .subscribe(
-                    {},
-                    {
-                        Log.d(TAG, "fetchImage: error ${it.message}")
-                    }
-                )
+            .subscribeOn(Schedulers.io())
+            .subscribe(
+                {},
+                {
+                    Log.d(TAG, "update db: error ${it.message}")
+                }
+            )
         )
+    }
+
+    fun getByteArray(responseBody: ResponseBody): ByteArray {
+
+        val outputStream = ByteArrayOutputStream()
+        val buf = ByteArray(1024)
+        var n: Int
+        val inputStream = responseBody.byteStream()
+
+        while (true) {
+            n = inputStream?.read(buf)!!
+            if (n == -1) break
+            outputStream.write(buf, 0, n)
+        }
+        outputStream.close()
+        inputStream.close()
+        return outputStream.toByteArray()
     }
 
     private fun fetchApiImages() {
