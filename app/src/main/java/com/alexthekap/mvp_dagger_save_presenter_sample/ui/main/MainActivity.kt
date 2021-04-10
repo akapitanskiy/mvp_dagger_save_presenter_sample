@@ -9,10 +9,10 @@ import com.alexthekap.mvp_dagger_save_presenter_sample.databinding.ActivityMainB
 import com.alexthekap.mvp_dagger_save_presenter_sample.di.ComponentManager
 import javax.inject.Inject
 
-class MainActivity : AppCompatActivity(), MainContract.IView {
+class MainActivity : AppCompatActivity(), MainView {
 
     @Inject
-    lateinit var presenter: MainContract.IPresenter
+    lateinit var presenter: MainPresenter
     private lateinit var b: ActivityMainBinding
     private val adapter = MainAdapter(this)
 
@@ -23,7 +23,6 @@ class MainActivity : AppCompatActivity(), MainContract.IView {
 
         b.recyclerView.layoutManager = LinearLayoutManager(this)
         b.recyclerView.adapter = adapter
-//        b.recyclerView.setHasFixedSize(true)
 
         ComponentManager.getMainActivityComponent().inject(this)
         adapter.setPresenter(presenter)

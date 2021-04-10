@@ -1,24 +1,26 @@
 package com.alexthekap.mvp_dagger_save_presenter_sample.data.nerwork.services
 
+import com.alexthekap.mvp_dagger_save_presenter_sample.BuildConfig
 import com.alexthekap.mvp_dagger_save_presenter_sample.data.nerwork.model.PictureResponse
 import io.reactivex.Single
 import okhttp3.ResponseBody
 import retrofit2.Call
-import retrofit2.http.GET
-import retrofit2.http.Path
-import retrofit2.http.Url
+import retrofit2.http.*
 
 /**
  * created on 09.03.2021 20:42
  */
 interface PixabayApi {
 
-    @GET("api/?key=18933503-d327756bf2a67a0d0b736d17a&q=yellow+flowers&image_type=photo&pretty=true")
-    fun getImages(): Single<PictureResponse>
+    companion object {
+        private const val API_KEY = BuildConfig.PIXABAY_API_KEY
+        private const val IMAGE_TYPE = "photo"
+    }
 
-//    @GET("{path}")
-//    fun downloadFile(@Path("path", encoded = true) path: String): Call<ResponseBody>
+    @GET("api/?key=$API_KEY&image_type=$IMAGE_TYPE")
+    fun getImages(@Query("q") response: String ): Single<PictureResponse>
 
+    @Streaming
     @GET
-    fun downloadFile(@Url url: String):Call<ResponseBody>
+    fun downloadFile(@Url url: String): Call<ResponseBody>
 }

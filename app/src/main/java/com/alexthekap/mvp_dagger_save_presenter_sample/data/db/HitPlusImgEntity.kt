@@ -13,18 +13,22 @@ import com.google.gson.annotations.SerializedName
 data class HitPlusImgEntity(
 
     @SerializedName("id")
-    var jsonId: Long,
+    val jsonId: Long,
 
-    var previewURL: String,
+    @SerializedName("previewURL")
+    val previewURL: String,
 
-    var largeImageURL: String,
+    @SerializedName("largeImageURL")
+    val largeImageURL: String,
 
-//    @SerializedName("user") // TODO try  creator instead user
-    var user: String,
+    @SerializedName("user") // TODO try  creator instead user
+    val creator: String,
 
-    var likes: Int
+    @SerializedName("likes")
+    val likes: Int
 ) {
     @PrimaryKey(autoGenerate = true)
+    @SerializedName("dbId")
     var dbId: Long = -1
 
     @ColumnInfo(typeAffinity = ColumnInfo.BLOB)
@@ -39,7 +43,7 @@ data class HitPlusImgEntity(
         if (jsonId != other.jsonId) return false
         if (previewURL != other.previewURL) return false
         if (largeImageURL != other.largeImageURL) return false
-        if (user != other.user) return false
+        if (creator != other.creator) return false
         if (likes != other.likes) return false
         if (!img.contentEquals(other.img)) return false
 
@@ -50,7 +54,7 @@ data class HitPlusImgEntity(
         var result = jsonId.hashCode()
         result = 31 * result + previewURL.hashCode()
         result = 31 * result + largeImageURL.hashCode()
-        result = 31 * result + user.hashCode()
+        result = 31 * result + creator.hashCode()
         result = 31 * result + likes
         result = 31 * result + dbId.hashCode()
         result = 31 * result + (img?.contentHashCode() ?: 0)

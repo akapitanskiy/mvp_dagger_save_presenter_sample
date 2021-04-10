@@ -2,6 +2,7 @@ package com.alexthekap.mvp_dagger_save_presenter_sample.ui.main
 
 import android.content.Context
 import android.graphics.BitmapFactory
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,10 +18,10 @@ import io.reactivex.disposables.CompositeDisposable
 /**
  * created on 01.03.2021 14:33
  */
-class MainAdapter (val context: Context)
+class MainAdapter (private val context: Context)
     : ListAdapter<HitPlusImgEntity, MainAdapter.PixabayItemViewHolder>(DIFF_CALLBACK) {
 
-    private var presenter: MainContract.IPresenter? = null
+    private var presenter: MainPresenter? = null
     private val disposable = CompositeDisposable()
 
     companion object {
@@ -33,7 +34,7 @@ class MainAdapter (val context: Context)
             override fun areContentsTheSame(oldItem: HitPlusImgEntity, newItem: HitPlusImgEntity): Boolean {
                 return  oldItem.previewURL == newItem.previewURL &&
                         oldItem.largeImageURL == newItem.largeImageURL &&
-                        oldItem.user == newItem.user &&
+                        oldItem.creator == newItem.creator &&
                         oldItem.img.contentEquals(newItem.img) &&
                         oldItem.likes == newItem.likes
             }
@@ -41,12 +42,14 @@ class MainAdapter (val context: Context)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PixabayItemViewHolder {
+        Log.d(this.javaClass.simpleName, "onCreateViewHolder: ${currentList.size}")
         return PixabayItemViewHolder(LayoutInflater.from(parent.context)
             .inflate(R.layout.item_pixaby, parent, false))
     }
 
     override fun onBindViewHolder(holder: PixabayItemViewHolder, position: Int) {
         val currentHit: HitPlusImgEntity = getItem(position)
+        Log.d(this.javaClass.simpleName, "onBindViewHolder: Itemposition $position")
         if (currentHit.img == null) {
             holder.imageView.setImageResource(R.drawable.ic_image_placeholder)
             presenter?.fetchImage(currentHit)
@@ -56,7 +59,7 @@ class MainAdapter (val context: Context)
             )
         }
 
-        holder.tvCreator.text = currentHit.user
+        holder.tvCreator.text = currentHit.creator
         holder.tvLikes.text = context.getString(R.string.likes_number, currentHit.likes)
     }
 
@@ -68,7 +71,7 @@ class MainAdapter (val context: Context)
         val tvLikes: TextView = itemView.findViewById(R.id.text_view_likes)
     }
 
-    fun setPresenter(presenter: MainContract.IPresenter) {
+    fun setPresenter(presenter: MainPresenter) {
         this.presenter = presenter
     }
 

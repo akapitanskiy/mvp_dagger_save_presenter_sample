@@ -1,6 +1,6 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
-    ext.kotlin_version = "1.4.31"
+    ext.kotlin_version = "1.4.32"
     repositories {
         google()
         jcenter()
@@ -23,4 +23,8 @@ allprojects {
 
 task clean(type: Delete) {
     delete rootProject.buildDir
+}
+
+ext {
+    dagger_version = '2.33'
 }

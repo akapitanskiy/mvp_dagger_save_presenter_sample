@@ -16,7 +16,7 @@ import javax.inject.Inject
 @ActivityScope
 class MainPresenter @Inject constructor(
     private val mainRepository: MainRepository
-) : BasePresenter<MainContract.IView>(), MainContract.IPresenter {
+) : BasePresenter<MainView>() {
 
     private var isRunning = false
     private val interval = 1000L
@@ -39,7 +39,7 @@ class MainPresenter @Inject constructor(
 
     private fun fetchImagesUrls() {
 
-        disposable.add(mainRepository.fetchPixabayData(isFirstLaunch)
+        disposable.add(mainRepository.fetchPixabayData()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
@@ -53,7 +53,7 @@ class MainPresenter @Inject constructor(
         )
     }
 
-    override fun fetchImage(hitEntity: HitPlusImgEntity) {
+    fun fetchImage(hitEntity: HitPlusImgEntity) {
         mainRepository.fetchImage(hitEntity)
     }
 
@@ -79,7 +79,7 @@ class MainPresenter @Inject constructor(
         mainRepository.onViewFinished()
     }
 
-    override fun isFirstLaunch(isFirstLaunch: Boolean) {
+    fun isFirstLaunch(isFirstLaunch: Boolean) {
         this.isFirstLaunch = isFirstLaunch
     }
 }

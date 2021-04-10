@@ -8,7 +8,7 @@ import javax.inject.Singleton
  * created on 16.02.2021 16:56
  */
 @Singleton
-@Component(modules = [AppModule::class])
+@Component(modules = [ AppModule::class ])
 interface AppComponent {
 
     fun plusMainActivityComponent(): MainActivityComponent

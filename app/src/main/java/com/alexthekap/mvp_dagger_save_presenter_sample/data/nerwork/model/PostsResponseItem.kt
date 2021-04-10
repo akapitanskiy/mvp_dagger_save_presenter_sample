@@ -7,6 +7,7 @@ import com.google.gson.annotations.SerializedName
  * created on 19.02.2021 15:58
  */
 data class PostsResponseItem(
+
     @SerializedName("userId") @Expose
     var userId: Int,
 

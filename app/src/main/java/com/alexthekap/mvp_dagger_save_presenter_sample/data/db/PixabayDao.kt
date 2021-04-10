@@ -1,7 +1,10 @@
 package com.alexthekap.mvp_dagger_save_presenter_sample.data.db
 
 import androidx.room.*
+import io.reactivex.Completable
+import io.reactivex.Maybe
 import io.reactivex.Observable
+import io.reactivex.Single
 
 /**
  * created on 19.03.2021 19:44
@@ -10,10 +13,13 @@ import io.reactivex.Observable
 interface PixabayDao {
 
     @Insert(onConflict = OnConflictStrategy.IGNORE) // TODO ignore
-    fun insert(hitList: List<HitPlusImgEntity>)
+    fun insert(hitList: List<HitPlusImgEntity>): Single<List<Long>>
 
     @Query("SELECT * FROM hits_table")
-    fun getAllHitsFromDb(): Observable<List<HitPlusImgEntity>>
+    fun getAllHitsFromDbObs(): Observable<List<HitPlusImgEntity>>
+
+    @Query("SELECT * FROM hits_table")
+    fun getAllHitsFromDbMaybe(): Maybe<List<HitPlusImgEntity>>
 
     @Query("SELECT * FROM hits_table WHERE jsonId = :id")
     fun getById(id: Long): HitPlusImgEntity?
@@ -27,16 +33,16 @@ interface PixabayDao {
     @Transaction
     fun updateAll(hitList: List<HitPlusImgEntity>) {
         for (hit in hitList) {
-            updateContent(hit.previewURL, hit.largeImageURL, hit.user, hit.likes, hit.jsonId)
+            updateContent(hit.previewURL, hit.largeImageURL, hit.creator, hit.likes, hit.jsonId)
         }
     }
 
     @Query("UPDATE hits_table SET img = :imgByteArr WHERE jsonId = :id")
     fun updateImg(imgByteArr: ByteArray, id: Long)
 
-    @Query("UPDATE hits_table SET previewURL=:previewURL, largeImageURL=:largeImageURL, user=:user, likes=:likes WHERE jsonId=:id")
-    fun updateContent(previewURL: String, largeImageURL: String, user: String, likes: Int, id: Long): Int
+    @Query("UPDATE hits_table SET previewURL=:previewURL, largeImageURL=:largeImageURL, creator=:creator, likes=:likes WHERE jsonId=:id")
+    fun updateContent(previewURL: String, largeImageURL: String, creator: String, likes: Int, id: Long): Int
 
-    @Query("UPDATE hits_table SET user=:user, likes=:likes WHERE jsonId=:id")
-    fun updateLikesAndUser(user: String, likes: Int, id: Long): Int
+    @Query("UPDATE hits_table SET creator=:creator, likes=:likes WHERE jsonId=:id")
+    fun updateLikesAndUser(creator: String, likes: Int, id: Long): Int
 }

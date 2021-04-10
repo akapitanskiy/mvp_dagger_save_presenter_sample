@@ -6,7 +6,7 @@ import androidx.room.RoomDatabase
 /**
  * created on 19.03.2021 19:37
  */
-@Database(entities = [HitPlusImgEntity::class], version = 7)
+@Database(entities = [HitPlusImgEntity::class], version = 8)
 abstract class PixabayDatabase : RoomDatabase() {
 
     companion object {
