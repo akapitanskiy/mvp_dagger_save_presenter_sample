@@ -4,13 +4,14 @@ import android.util.Log
 import com.alexthekap.mvp_dagger_save_presenter_sample.data.db.*
 import com.alexthekap.mvp_dagger_save_presenter_sample.data.nerwork.model.PictureResponse
 import com.alexthekap.mvp_dagger_save_presenter_sample.data.nerwork.services.PixabayApi
+import com.alexthekap.mvp_dagger_save_presenter_sample.di.component.ActivityScope
 import com.alexthekap.mvp_dagger_save_presenter_sample.utils.logException
+import com.alexthekap.mvp_dagger_save_presenter_sample.utils.logMessage
 import io.reactivex.Completable
+import io.reactivex.Flowable
 import io.reactivex.Observable
 import io.reactivex.Single
-import io.reactivex.SingleSource
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.functions.Function
 import io.reactivex.rxkotlin.addTo
 import io.reactivex.rxkotlin.subscribeBy
 import io.reactivex.schedulers.Schedulers
@@ -26,6 +27,7 @@ import javax.inject.Inject
 /**
  * created on 19.02.2021 16:32
  */
+@ActivityScope
 class MainRepository @Inject constructor( // TODO internal class надо ли ???
     private val pixabayApi: PixabayApi,
     private val pixabayDao: PixabayDao
@@ -39,81 +41,166 @@ class MainRepository @Inject constructor( // TODO internal class надо ли ?
         fetchPixabayDataDebouncedSubj
             .throttleFirst(2000, TimeUnit.MILLISECONDS)
             .subscribe {
-                Log.d(TAG, "debounce: called fetchApiImages()")
-                fetchApiImages()
+                logMessage(this, "debounce: called fetchApiImages()")
+//                fetchApiImages()
             }
             .addTo(disposable)
     }
 
-    fun fetchPixabayData(): Observable<List<HitPlusImgEntity>> {
-
-        return Observable.concat(
-                pixabayDao.getAllHitsFromDbMaybe().toObservable(),
-                loadFromServerAndObserveDb()
-            )
-            .distinctUntilChanged()
+    fun observeDb(page: Int): Observable<List<HitPlusImgEntity>> {
+        return pixabayDao.getAllHitsFromDbObs()
+//        return Observable.concat(
+//                pixabayDao.getAllHitsFromDbMaybe().toObservable(),
+//                loadFromNetworkAndObserveDb(page)
+//            )
+//            .distinctUntilChanged()
     }
 
-    private fun loadFromServerAndObserveDb(): Observable<List<HitPlusImgEntity>> {
+//    private fun loadFromNetworkAndObserveDb(page: Int): Observable<List<HitPlusImgEntity>> {
+//        return loadFromNetworkAndSaveToDb(page)
+//            .flatMapObservable { pixabayDao.getAllHitsFromDbObs() }
+//    }
 
-        return loadFromNetwork()
-            .flatMap { saveHitsToDb(it.hits) }
-            .map { for (hit in it) {
-                    fetchImage(hit)
-                 }
+    @Synchronized
+    fun loadFromNetworkAndSaveToDb(page: Int): Single<Unit> {
+        logMessage(this, "loadMore rep loadFromNetworkAndSaveToDb: $page")
+        return loadFromNetwork(page)
+            .doOnError {
+                logMessage(this, "loadFromNetworkAndSaveToDb: ERROR $it ${it.message}")
             }
-            .flatMapObservable { pixabayDao.getAllHitsFromDbObs() }
+            .retry(3)
+            .flatMap { saveHitsToDb(it.hits) }
+            .map {
+                logMessage(this, "loadFromNetworkAndSaveToDb: map fetchImages(it)")
+                fetchImages(it)
+            }
+    }
+
+    private fun fetchImages(list: List<HitPlusImgEntity>) {
+        for (hit in list) {
+            fetchImage(hit)
+        }
     }
 
     private fun saveHitsToDb(hits: List<HitPlusImgEntity>): Single<List<HitPlusImgEntity>> {
 
-        return pixabayDao.insert(hits)
-            .flatMap { Single.just(hits) }
+        val listToUpdate = ArrayList<HitPlusImgEntity>()
+        val listToInsert = ArrayList<HitPlusImgEntity>()
+        logMessage(this, "saveHitsToDb(): ${Thread.currentThread().name} ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+//        val listToUpdateContent = ArrayList<HitPlusImgEntity>()
+        for (jsonHit in hits) {
+            val dbHit = pixabayDao.getById(jsonHit.jsonId)
+
+            if (dbHit == null || dbHit.img == null) {
+//                if (jsonHit.creator == "ulleo" || jsonHit.creator == "klimkin") {
+//                    jsonHit.creator = "lkjlkjlkj"
+//                }
+//                jsonHit.creator = "lkjlkjlkj"
+                listToInsert.add(jsonHit)
+                logMessage(this, "saveHitsToDb(): listToInsert.added ${jsonHit.jsonId}")
+            } else if (dbHit.likes != jsonHit.likes || dbHit.creator != jsonHit.creator) {
+                listToUpdate.add(jsonHit)
+                logMessage(this, "saveHitsToDb(): listToUpdate.added ${jsonHit.jsonId}")
+            }
+
+//            if (dbHit?.img != null && (dbHit.likes != jsonHit.likes || dbHit.creator != jsonHit.creator)) {
+////                pixabayDao.updateLikesAndUser(jsonHit.creator, jsonHit.likes, jsonHit.jsonId)
+//                listToUpdate.add(dbHit)
+//                logMessage(this,"fetchApiImages: updateLikesAndUser row ${jsonHit.jsonId} ${dbHit.jsonId}")
+//            }
+//
+//            if (isContentDifferent(jsonHit, dbHit) && dbHit!!.img == null) {
+////                                pixabayDao.updateContent(jsonHit.previewURL, jsonHit.largeImageURL, jsonHit.user, jsonHit.likes, jsonHit.jsonId)
+//                logMessage(this,"fetchApiImages: row updated ${jsonHit.jsonId} ${dbHit.jsonId}")
+//                listToUpdate.add(jsonHit)
+//            }
+        }
+//        pixabayDao.insert(listToInsert)
+//        if ( !listToUpdate.isEmpty() ) {
+//            pixabayDao.updateAll(listToUpdate)
+//        }
+
+        return pixabayDao.insert(listToInsert)
+            .flatMap {
+                val list = ArrayList<Single<Int>>()
+//                val completableChain = Completable.fromAction { Unit }
+                val singleChain = Single.fromCallable { 111 }
+                val flow = Flowable.just(222)
+                logMessage(this, "saveHitsToDb(): flatMap Upd 1")
+                for (hit in listToUpdate) {
+//                    completableChain.concatWith(pixabayDao.updateLikesAndUser(hit.creator, hit.likes, hit.jsonId))
+                    logMessage(this, "saveHitsToDb(): flatMap Upd for ${hit.jsonId}")
+                    flow.concatWith(pixabayDao.updateLikesAndUser(hit.creator, hit.likes, hit.jsonId))
+                }
+                logMessage(this, "saveHitsToDb(): flatMap Upd 2")
+//                for (single in list) {
+//                    single.subscribe(
+//                        {
+//                            logMessage(this, "saveHitsToDb(): for 2 onSuccess $it")
+//                        },
+//                        {
+//                            logMessage(this, "saveHitsToDb(): ERROR!!!!!!!!!! for 2 onError ${it.message}")
+//                        }
+//                    )
+//                }
+//                flow.subscribe(
+//                    {
+//                        logMessage(this, "saveHitsToDb(): for 2 onSuccess $it")
+//                    },
+//                    {}
+//                )
+                logMessage(this, "saveHitsToDb(): flatMap Upd 3")
+                flow.subscribe()
+                flow.toList()
+            }
+            .flatMap {
+                logMessage(this, "saveHitsToDb(): flatMap Single.just ")
+                Single.just(listToInsert) }
 //            .doOnError {
 //                logException(it, this)
 //            }
     }
 
-    private fun loadFromNetwork(): Single<PictureResponse> {
-        return pixabayApi.getImages("yellow+flowers")
+    private fun loadFromNetwork(page: Int): Single<PictureResponse> {
+        return pixabayApi.getImages("yellow+flowers", page)
     }
 
-    fun fetchImage(hitEntity: HitPlusImgEntity) {
+    private fun fetchImage(hitEntity: HitPlusImgEntity) {
+        logMessage(this, "fetchImage(): ${hitEntity.jsonId}")
 
         val call = pixabayApi.downloadFile(hitEntity.largeImageURL)
 
         call.enqueue(object : Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                 if (!response.isSuccessful) {
-                    Log.d(TAG, "ERROR onResponse: ${response.errorBody()}")
+                    logMessage(this, "ERROR fetchImage() onResponse: ${response.errorBody()}")
 //                    fetchPixabayDataDebouncedSubj.onNext(Unit)
                 } else {
                     response.body()?.let {
                         val arr = getByteArray(it)
                         update(arr, hitEntity.jsonId)
-                        Log.d(TAG, "onResponse: ByteArray size ${arr.size}")
+                        logMessage(this, "fetchImage() onResponse: ByteArray size ${arr.size}")
                     }
                 }
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Log.d(TAG, "ERROR onFailure: ${t.message}")
+                logMessage(this, "ERROR fetchImage() onFailure: ${t.message}")
                 fetchPixabayDataDebouncedSubj.onNext(Unit)
             }
         })
     }
 
     private fun update(array: ByteArray, jsonId: Long) {
-
         Completable.fromAction {
             pixabayDao.updateImg(array, jsonId)
-            Log.d(TAG, "update: ByteArray size ${array.size}")
+            logMessage(this, "update(): ByteArray size ${array.size}")
         }
         .subscribeOn(Schedulers.io())
         .subscribeBy(
             onComplete = {},
             onError = {
-                logException(it, this)
+                logException(this, it)
             }
         ).addTo(disposable)
     }
@@ -137,9 +224,9 @@ class MainRepository @Inject constructor( // TODO internal class надо ли ?
  
     private fun fetchApiImages() {
         disposable.add(
-            pixabayApi.getImages("yellow+flowers")
+            pixabayApi.getImages("yellow+flowers", 1) // TODO page
                 .map {
-                    Log.d(TAG, "fetchApiImages() map: GET images api called. response: $it")
+                    logMessage(this, "fetchApiImages() map: GET images api called. response: $it")
                     return@map it.hits
                 }
                 .subscribeOn(Schedulers.io())
@@ -151,12 +238,12 @@ class MainRepository @Inject constructor( // TODO internal class надо ли ?
 
                             if (dbHit?.img != null && (dbHit.likes != jsonHit.likes || dbHit.creator != jsonHit.creator)) {
                                 pixabayDao.updateLikesAndUser(jsonHit.creator, jsonHit.likes, jsonHit.jsonId)
-                                Log.d(TAG,"fetchApiImages: updateLikesAndUser row ${jsonHit.jsonId} ${dbHit.jsonId}")
+                                logMessage(this,"fetchApiImages(): updateLikesAndUser row ${jsonHit.jsonId} ${dbHit.jsonId}")
                             }
 
                             if (isContentDifferent(jsonHit, dbHit) && dbHit!!.img == null) {
 //                                pixabayDao.updateContent(jsonHit.previewURL, jsonHit.largeImageURL, jsonHit.user, jsonHit.likes, jsonHit.jsonId)
-                                Log.d(TAG,"fetchApiImages: row updated ${jsonHit.jsonId} ${dbHit.jsonId}")
+                                logMessage(this,"fetchApiImages(): row updated ${jsonHit.jsonId} ${dbHit.jsonId}")
                                 listToUpdate.add(jsonHit)
                             }
                         }
@@ -164,11 +251,11 @@ class MainRepository @Inject constructor( // TODO internal class надо ли ?
                         if ( !listToUpdate.isEmpty() ) {
                             pixabayDao.updateAll(listToUpdate)
                         }
-                        Log.d(TAG,"fetchApiImages success: pixabayDao insert called, size ${jsonHits.size}")
+                        logMessage(this,"fetchApiImages() success: pixabayDao insert called, size ${jsonHits.size}")
                     },
 
                     {
-                        Log.d(TAG, "fetchApiImages onError : ${it.message}")
+                        logMessage(this, "fetchApiImages() onError : ${it.message}")
                     }
                 )
         )

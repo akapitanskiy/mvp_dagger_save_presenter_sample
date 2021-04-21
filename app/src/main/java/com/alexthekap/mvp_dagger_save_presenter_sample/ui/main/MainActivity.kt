@@ -4,37 +4,40 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.alexthekap.mvp_dagger_save_presenter_sample.data.db.HitPlusImgEntity
 import com.alexthekap.mvp_dagger_save_presenter_sample.databinding.ActivityMainBinding
 import com.alexthekap.mvp_dagger_save_presenter_sample.di.ComponentManager
+import com.alexthekap.mvp_dagger_save_presenter_sample.utils.logMessage
 import javax.inject.Inject
 
 class MainActivity : AppCompatActivity(), MainView {
 
     @Inject
     lateinit var presenter: MainPresenter
+    @Inject
+    lateinit var adapter: MainAdapter
+
     private lateinit var b: ActivityMainBinding
-    private val adapter = MainAdapter(this)
+    val llManager = LinearLayoutManager(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         b = ActivityMainBinding.inflate(layoutInflater)
         setContentView(b.root)
-
-        b.recyclerView.layoutManager = LinearLayoutManager(this)
-        b.recyclerView.adapter = adapter
-
         ComponentManager.getMainActivityComponent().inject(this)
-        adapter.setPresenter(presenter)
+
+        initRecycler()
+
         presenter.bindView(this)
         presenter.isFirstLaunch(savedInstanceState == null)
         presenter.onViewReady()
-        Log.d("MainActivityTag", "onCreate: ${savedInstanceState?.toString()?.substring(0, 100)}")
+        logMessage(this, "onCreate: bundle = ${savedInstanceState?.toString()?.substring(0, 100)}")
     }
 
     override fun updateList(list: List<HitPlusImgEntity>) {
         adapter.submitList(list)
-        Log.d("MainActivityTag", "updateList: called. size ${list.size}")
+        logMessage(this, "updateList: called. size ${list.size}")
     }
 
     override fun updateTimer(time: String) {
@@ -49,6 +52,34 @@ class MainActivity : AppCompatActivity(), MainView {
             presenter.onFinished()
             ComponentManager.clearMainActivityComponent()
         }
+    }
+
+    private fun initRecycler() {
+//        val llManager = LinearLayoutManager(this)
+        b.recyclerView.layoutManager = llManager
+        b.recyclerView.adapter = adapter
+
+        b.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+
+
+
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+
+                if (dy > 0) {
+                    val totalItemCount = llManager.itemCount
+                    val lastVisibleItem = llManager.findLastVisibleItemPosition()
+//                    logMessage(this"MainActivityTag", "onScrolled: total = $totalItemCount last = $lastVisibleItem")
+                    presenter.loadMore(lastVisibleItem)
+
+//                    if ((presenter.state == State.DONE) && totalItemCount <= (lastVisibleItem + presenter.OFFSET)) {
+//                        presenter.state = State.LOADING
+//                        presenter.loadMore()
+//                    }
+
+                }
+            }
+        })
     }
 
 }

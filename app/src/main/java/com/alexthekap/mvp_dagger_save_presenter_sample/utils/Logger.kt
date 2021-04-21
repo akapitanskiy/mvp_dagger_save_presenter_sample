@@ -5,10 +5,10 @@ import android.util.Log
 /**
  * created on 04.04.2021 15:51
  */
-fun logException(throwable: Throwable, any: Any) {
-    Log.d("Logger", "${any.javaClass.simpleName} msg: ${throwable.message} $throwable")
+fun logException(any: Any, throwable: Throwable) {
+    Log.d("Log ${any.javaClass.simpleName}", "err msg: ${throwable.message} $throwable")
 }
 
-fun logMessage(msg: String, sourceClass: Any) {
-    Log.d(sourceClass.javaClass.simpleName, "message: $msg")
+fun logMessage(sourceClass: Any, msg: String) {
+    Log.d("Log ${sourceClass.javaClass.simpleName}", "msg: $msg")
 }

@@ -11,15 +11,14 @@ import com.alexthekap.mvp_dagger_save_presenter_sample.di.module.AppModule
  */
 object ComponentManager {
 
-    private lateinit var appContext: Context
     private lateinit var appComponent: AppComponent
     private var mainActivityComponent: MainActivityComponent? = null
 
     fun init(applicationContext: Context) {
-        appContext = applicationContext
+//        appContext = applicationContext
         appComponent = DaggerAppComponent
             .builder()
-            .appModule(AppModule(appContext))
+            .appModule(AppModule(applicationContext))
             .build()
     }
 

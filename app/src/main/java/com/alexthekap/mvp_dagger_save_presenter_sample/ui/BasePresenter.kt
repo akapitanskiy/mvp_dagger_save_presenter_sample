@@ -1,6 +1,7 @@
 package com.alexthekap.mvp_dagger_save_presenter_sample.ui
 
 import android.util.Log
+import com.alexthekap.mvp_dagger_save_presenter_sample.utils.logMessage
 import io.reactivex.disposables.CompositeDisposable
 
 /**
@@ -12,12 +13,12 @@ abstract class BasePresenter<V> : BaseIPresenter<V> {
     val disposable = CompositeDisposable()
 
     override fun bindView(view: V) {
-        Log.d("BasePresenter", "view attached")
+        logMessage(this, "view attached")
         this.view = view
     }
 
     override fun unbindView() {
-        Log.d("BasePresenter", "view detached")
+        logMessage(this, "view detached")
         view = null
         disposable.clear()
     }

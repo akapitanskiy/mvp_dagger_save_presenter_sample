@@ -17,10 +17,11 @@ interface PixabayApi {
         private const val IMAGE_TYPE = "photo"
     }
 
+//    @GET("api/?key=$API_KEY&image_type=$IMAGE_TYPE&per_page=10")
     @GET("api/?key=$API_KEY&image_type=$IMAGE_TYPE")
-    fun getImages(@Query("q") response: String ): Single<PictureResponse>
+    fun getImages(@Query("q") response: String, @Query("page") page: Int): Single<PictureResponse>
 
-    @Streaming
+//    @Streaming
     @GET
     fun downloadFile(@Url url: String): Call<ResponseBody>
 }

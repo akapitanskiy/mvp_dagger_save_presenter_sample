@@ -1,10 +1,10 @@
 package com.alexthekap.mvp_dagger_save_presenter_sample.data.db
 
+import android.util.Log
 import androidx.room.*
-import io.reactivex.Completable
-import io.reactivex.Maybe
-import io.reactivex.Observable
-import io.reactivex.Single
+import io.reactivex.*
+import io.reactivex.disposables.Disposable
+import io.reactivex.subjects.CompletableSubject
 
 /**
  * created on 19.03.2021 19:44
@@ -18,8 +18,8 @@ interface PixabayDao {
     @Query("SELECT * FROM hits_table")
     fun getAllHitsFromDbObs(): Observable<List<HitPlusImgEntity>>
 
-    @Query("SELECT * FROM hits_table")
-    fun getAllHitsFromDbMaybe(): Maybe<List<HitPlusImgEntity>>
+//    @Query("SELECT * FROM hits_table")
+//    fun getAllHitsFromDbMaybe(): Maybe<List<HitPlusImgEntity>>
 
     @Query("SELECT * FROM hits_table WHERE jsonId = :id")
     fun getById(id: Long): HitPlusImgEntity?
@@ -32,8 +32,11 @@ interface PixabayDao {
 
     @Transaction
     fun updateAll(hitList: List<HitPlusImgEntity>) {
+//    fun updateAll(hitList: List<HitPlusImgEntity>) {
+
+        val singles = ArrayList<Completable>()
         for (hit in hitList) {
-            updateContent(hit.previewURL, hit.largeImageURL, hit.creator, hit.likes, hit.jsonId)
+            updateLikesAndUser(hit.creator, hit.likes, hit.jsonId)
         }
     }
 
@@ -44,5 +47,6 @@ interface PixabayDao {
     fun updateContent(previewURL: String, largeImageURL: String, creator: String, likes: Int, id: Long): Int
 
     @Query("UPDATE hits_table SET creator=:creator, likes=:likes WHERE jsonId=:id")
-    fun updateLikesAndUser(creator: String, likes: Int, id: Long): Int
+    fun updateLikesAndUser(creator: String, likes: Int, id: Long): Single<Int>
+
 }

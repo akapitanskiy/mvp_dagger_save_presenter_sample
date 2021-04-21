@@ -39,11 +39,9 @@ class RepoModuleProvider {
         return retrofit.create(PixabayApi::class.java)
     }
 
-
     @Provides
     @ActivityScope
     fun providePixabayDao(db: PixabayDatabase): PixabayDao {
         return db.getPixabayDao()
     }
-
 }
