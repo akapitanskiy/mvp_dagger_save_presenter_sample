@@ -4,7 +4,7 @@ import com.alexthekap.mvp_dagger_save_presenter_sample.data.db.PixabayDao
 import com.alexthekap.mvp_dagger_save_presenter_sample.data.db.PixabayDatabase
 import com.alexthekap.mvp_dagger_save_presenter_sample.data.nerwork.services.PixabayApi
 import com.alexthekap.mvp_dagger_save_presenter_sample.ui.main.MainActivity
-import com.alexthekap.mvp_dagger_save_presenter_sample.ui.pin_code.ShowImageActivity
+import com.alexthekap.mvp_dagger_save_presenter_sample.ui.show_image.ShowImageActivity
 import dagger.Module
 import dagger.Provides
 import dagger.Subcomponent

@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@color/black"
     android:fitsSystemWindows="true"
-    tools:context=".ui.pin_code.ShowImageActivity">
+    tools:context=".ui.show_image.ShowImageActivity">
 
     <com.github.chrisbanes.photoview.PhotoView
         android:id="@+id/photo_view"
@@ -16,13 +16,5 @@
         app:layout_constraintTop_toTopOf="parent"
         android:scaleType="fitCenter"
         />
-
-<!--    <FrameLayout-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="50dp"-->
-<!--        android:foregroundGravity="bottom"-->
-<!--        android:background="@color/black"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--        />-->
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.alexthekap.mvp_dagger_save_presenter_sample.data.db.HitPlusImgEntity
 import com.alexthekap.mvp_dagger_save_presenter_sample.databinding.ActivityMainBinding
 import com.alexthekap.mvp_dagger_save_presenter_sample.di.ComponentManager
-import com.alexthekap.mvp_dagger_save_presenter_sample.ui.pin_code.ShowImageActivity
+import com.alexthekap.mvp_dagger_save_presenter_sample.ui.show_image.ShowImageActivity
 import com.alexthekap.mvp_dagger_save_presenter_sample.utils.logMessage
 import java.util.*
 import javax.inject.Inject
@@ -25,10 +25,7 @@ class MainActivity : AppCompatActivity(), MainView {
     lateinit var adapter: MainAdapter
 
     private lateinit var b: ActivityMainBinding
-//    val llManager = LinearLayoutManager(this)
-    val llManager = GridLayoutManager(this, 2)
-
-
+    val layoutManager = GridLayoutManager(this, 2)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,13 +49,6 @@ class MainActivity : AppCompatActivity(), MainView {
                         or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
             }
         }, 1000)
-        // из другого потока пытается изменять UI поток:
-//        Timer().schedule(timerTask {
-//            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-//                window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-//                        or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
-//            }
-//        }, 1000)
     }
 
     override fun updateList(list: List<HitPlusImgEntity>) {
@@ -81,7 +71,7 @@ class MainActivity : AppCompatActivity(), MainView {
     }
 
     private fun initRecycler() {
-        b.recyclerView.layoutManager = llManager
+        b.recyclerView.layoutManager = layoutManager
         b.recyclerView.adapter = adapter
 
         b.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
@@ -93,9 +83,9 @@ class MainActivity : AppCompatActivity(), MainView {
                     && ( !recyclerView.canScrollVertically(1)
                       || !recyclerView.canScrollVertically(-1) )
                 ) {
-                    logMessage(this@MainActivity,"onScrollStateChanged: loadMore ${llManager.findLastVisibleItemPosition()}")
+                    logMessage(this@MainActivity,"onScrollStateChanged: loadMore ${layoutManager.findLastVisibleItemPosition()}")
                     presenter.state = State.DONE
-                    presenter.loadMore(llManager.findLastVisibleItemPosition())
+                    presenter.loadMore(layoutManager.findLastVisibleItemPosition())
                 }
             }
 
@@ -103,7 +93,7 @@ class MainActivity : AppCompatActivity(), MainView {
                 super.onScrolled(recyclerView, dx, dy)
 
                 if (dy > 0) {
-                    val lastVisibleItem = llManager.findLastVisibleItemPosition()
+                    val lastVisibleItem = layoutManager.findLastVisibleItemPosition()
                     presenter.loadMore(lastVisibleItem)
                 }
             }

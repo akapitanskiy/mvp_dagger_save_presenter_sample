@@ -38,7 +38,6 @@ class MainAdapter @Inject constructor(
             override fun areItemsTheSame(oldItem: HitPlusImgEntity, newItem: HitPlusImgEntity): Boolean {
                 return oldItem.jsonId == newItem.jsonId
             }
-
             override fun areContentsTheSame(oldItem: HitPlusImgEntity, newItem: HitPlusImgEntity): Boolean {
                 return  oldItem.creator == newItem.creator &&
                         oldItem.img.contentEquals(newItem.img) &&

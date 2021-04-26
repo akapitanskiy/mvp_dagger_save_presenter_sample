@@ -1,9 +1,8 @@
-package com.alexthekap.mvp_dagger_save_presenter_sample.ui.pin_code
+package com.alexthekap.mvp_dagger_save_presenter_sample.ui.show_image
 
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.view.View
-import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import com.alexthekap.mvp_dagger_save_presenter_sample.R
 import com.alexthekap.mvp_dagger_save_presenter_sample.databinding.ActivityViewImageBinding
@@ -29,26 +28,7 @@ class ShowImageActivity : AppCompatActivity(), ShowImageView {
         setContentView(b.root)
         ComponentManager.getMainActivityComponent().inject(this)
 
-//        window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-//            WindowManager.LayoutParams.FLAG_FULLSCREEN)
-//
-//        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-//            window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-//                    or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
-//        }
-        b.photoView.setOnPhotoTapListener(object : OnPhotoTapListener {
-            override fun onPhotoTap(view: ImageView?, x: Float, y: Float) {
-                if (isFullScreen) {
-//                    supportActionBar?.show()
-                    showSystemUI()
-                    isFullScreen = false
-                } else {
-//                    supportActionBar?.hide()
-                    hideSystemUI()
-                    isFullScreen = true
-                }
-            }
-        })
+        b.photoView.setOnPhotoTapListener(tapListener)
         presenter.bindView(this)
         val jsonId = intent.getLongExtra(EXTRA_ID, -1)
         if (jsonId != -1L) {
@@ -85,4 +65,15 @@ class ShowImageActivity : AppCompatActivity(), ShowImageView {
                 or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN)
     }
 
+    private val tapListener = OnPhotoTapListener { view, x, y ->
+        if (isFullScreen) {
+//            supportActionBar?.show()
+            showSystemUI()
+            isFullScreen = false
+        } else {
+//            supportActionBar?.hide()
+            hideSystemUI()
+            isFullScreen = true
+        }
+    }
 }

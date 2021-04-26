@@ -1,4 +1,4 @@
-package com.alexthekap.mvp_dagger_save_presenter_sample.ui.pin_code
+package com.alexthekap.mvp_dagger_save_presenter_sample.ui.show_image
 
 import com.alexthekap.mvp_dagger_save_presenter_sample.data.repository.MainRepository
 import com.alexthekap.mvp_dagger_save_presenter_sample.ui.BasePresenter

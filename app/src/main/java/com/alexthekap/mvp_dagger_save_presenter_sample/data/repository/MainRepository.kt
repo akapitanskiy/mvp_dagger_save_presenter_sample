@@ -20,7 +20,6 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.io.ByteArrayOutputStream
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 /**
@@ -31,20 +30,9 @@ class MainRepository @Inject constructor(
     private val pixabayApi: PixabayApi,
     private val pixabayDao: PixabayDao
 ) {
-
     private val disposable = CompositeDisposable()
     private var fetchPixabayDataDebouncedSubj = PublishSubject.create<Unit>()
     var maxPhotos: Int = 0
-
-    init {
-        fetchPixabayDataDebouncedSubj
-            .throttleFirst(2000, TimeUnit.MILLISECONDS)
-            .subscribe {
-                logMessage(this, "debounce called fetchApiImages")
-//                fetchApiImages()
-            }
-            .addTo(disposable)
-    }
 
     fun observeDb(): Flowable<List<HitPlusImgEntity>> {
         return pixabayDao.getAllHitsFromDbObserv()

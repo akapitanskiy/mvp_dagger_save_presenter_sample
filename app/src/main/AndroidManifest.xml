@@ -13,7 +13,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Mvp_dagger_save_presenter_sample">
 
-        <activity android:name=".ui.pin_code.ShowImageActivity">
+        <activity android:name=".ui.show_image.ShowImageActivity">
         </activity>
 
         <activity android:name=".ui.main.MainActivity">

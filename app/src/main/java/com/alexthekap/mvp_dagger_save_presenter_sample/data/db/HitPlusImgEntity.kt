@@ -28,7 +28,6 @@ data class HitPlusImgEntity(
     val likes: Int
 ) {
     @PrimaryKey(autoGenerate = true)
-//    @SerializedName("dbId") // TODO надо ли ?
     var dbId: Long = -1
 
     @ColumnInfo(typeAffinity = ColumnInfo.BLOB)
