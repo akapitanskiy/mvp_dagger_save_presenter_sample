@@ -46,6 +46,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation 'androidx.core:core-ktx:1.3.2'
     implementation 'androidx.appcompat:appcompat:1.2.0'
+//    implementation "androidx.appcompat:appcompat-resources:1.2.0"
     implementation 'com.google.android.material:material:1.3.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
 
@@ -66,19 +67,16 @@ dependencies {
     implementation "io.reactivex.rxjava2:rxkotlin:2.2.0"
 
     // Room
-    def room_version = "2.2.6"
+    def room_version = "2.3.0"
     implementation "androidx.room:room-runtime:$room_version"
     kapt "androidx.room:room-compiler:$room_version"
     // Rx for Room
     implementation "androidx.room:room-rxjava2:$room_version"
 
-    // paging
-    def paging_version = "2.1.2"
-    implementation "androidx.paging:paging-runtime-ktx:$paging_version"
-    implementation "androidx.paging:paging-rxjava2-ktx:$paging_version"
-
     // Picasso
     implementation 'com.squareup.picasso:picasso:2.71828'
+    // PhotoView
+    implementation 'com.github.chrisbanes:PhotoView:2.3.0'
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'

@@ -1,14 +1,20 @@
 package com.alexthekap.mvp_dagger_save_presenter_sample.ui.main
 
-import androidx.appcompat.app.AppCompatActivity
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
-import android.util.Log
-import androidx.recyclerview.widget.LinearLayoutManager
+import android.os.Handler
+import android.os.Looper
+import android.view.View
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.alexthekap.mvp_dagger_save_presenter_sample.data.db.HitPlusImgEntity
 import com.alexthekap.mvp_dagger_save_presenter_sample.databinding.ActivityMainBinding
 import com.alexthekap.mvp_dagger_save_presenter_sample.di.ComponentManager
+import com.alexthekap.mvp_dagger_save_presenter_sample.ui.pin_code.ShowImageActivity
 import com.alexthekap.mvp_dagger_save_presenter_sample.utils.logMessage
+import java.util.*
 import javax.inject.Inject
 
 class MainActivity : AppCompatActivity(), MainView {
@@ -19,7 +25,10 @@ class MainActivity : AppCompatActivity(), MainView {
     lateinit var adapter: MainAdapter
 
     private lateinit var b: ActivityMainBinding
-    val llManager = LinearLayoutManager(this)
+//    val llManager = LinearLayoutManager(this)
+    val llManager = GridLayoutManager(this, 2)
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,6 +42,23 @@ class MainActivity : AppCompatActivity(), MainView {
         presenter.isFirstLaunch(savedInstanceState == null)
         presenter.onViewReady()
         logMessage(this, "onCreate: bundle = ${savedInstanceState?.toString()?.substring(0, 100)}")
+    }
+
+    override fun onStart() {
+        super.onStart()
+        Handler(Looper.getMainLooper()).postDelayed({
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+                window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
+            }
+        }, 1000)
+        // из другого потока пытается изменять UI поток:
+//        Timer().schedule(timerTask {
+//            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+//                window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+//                        or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
+//            }
+//        }, 1000)
     }
 
     override fun updateList(list: List<HitPlusImgEntity>) {
@@ -55,31 +81,39 @@ class MainActivity : AppCompatActivity(), MainView {
     }
 
     private fun initRecycler() {
-//        val llManager = LinearLayoutManager(this)
         b.recyclerView.layoutManager = llManager
         b.recyclerView.adapter = adapter
 
         b.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
 
-
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                super.onScrollStateChanged(recyclerView, newState)
+                logMessage(this@MainActivity,"onScrollStateChanged: ${presenter.state}")
+                if (presenter.state != State.LOADING
+                    && ( !recyclerView.canScrollVertically(1)
+                      || !recyclerView.canScrollVertically(-1) )
+                ) {
+                    logMessage(this@MainActivity,"onScrollStateChanged: loadMore ${llManager.findLastVisibleItemPosition()}")
+                    presenter.state = State.DONE
+                    presenter.loadMore(llManager.findLastVisibleItemPosition())
+                }
+            }
 
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
 
                 if (dy > 0) {
-                    val totalItemCount = llManager.itemCount
                     val lastVisibleItem = llManager.findLastVisibleItemPosition()
-//                    logMessage(this"MainActivityTag", "onScrolled: total = $totalItemCount last = $lastVisibleItem")
                     presenter.loadMore(lastVisibleItem)
-
-//                    if ((presenter.state == State.DONE) && totalItemCount <= (lastVisibleItem + presenter.OFFSET)) {
-//                        presenter.state = State.LOADING
-//                        presenter.loadMore()
-//                    }
-
                 }
             }
         })
+
+        adapter.onItemClickListener = MainAdapter.OnItemClickListener { hit ->
+            val intent = Intent(this@MainActivity, ShowImageActivity::class.java)
+            intent.putExtra(ShowImageActivity.EXTRA_ID, hit.jsonId)
+            startActivity(intent)
+        }
     }
 
 }

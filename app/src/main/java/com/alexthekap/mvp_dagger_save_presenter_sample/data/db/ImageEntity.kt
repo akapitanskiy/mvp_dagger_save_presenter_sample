@@ -12,7 +12,7 @@ import androidx.room.PrimaryKey
 @Entity(
     tableName = "images_table",
     foreignKeys = [ForeignKey(
-        entity = HitPlusImgEntity::class, parentColumns = ["id"], childColumns = ["id"], onDelete = CASCADE
+        entity = HitPlusImgEntity::class, parentColumns = ["jsonId"], childColumns = ["jsonId"], onDelete = CASCADE
     )]
 )
 data class ImageEntity(

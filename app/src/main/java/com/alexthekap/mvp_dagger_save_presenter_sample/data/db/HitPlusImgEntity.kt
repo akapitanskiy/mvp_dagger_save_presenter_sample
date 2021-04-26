@@ -22,13 +22,13 @@ data class HitPlusImgEntity(
     val largeImageURL: String,
 
     @SerializedName("user") // TODO try  creator instead user
-    val creator: String,
+    var creator: String,
 
     @SerializedName("likes")
     val likes: Int
 ) {
     @PrimaryKey(autoGenerate = true)
-    @SerializedName("dbId")
+//    @SerializedName("dbId") // TODO надо ли ?
     var dbId: Long = -1
 
     @ColumnInfo(typeAffinity = ColumnInfo.BLOB)
